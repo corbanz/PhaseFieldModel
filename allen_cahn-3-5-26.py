@@ -2,14 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Grid
-Nx, Ny = 256, 256 
+Nx, Ny = 2560, 2560 
 Lx, Ly = 1.0, 1.0
 dx = Lx / (Nx - 1) #computes space between whole points
 dy = Ly / (Ny - 1)
 
 # Parameters 
 M = 1.0 #Essentially Speed multiplier
-kappa = 1.0e-4 #Strength of the energy gradient term or smoothing
+kappa = 1.0e-1 #Strength of the energy gradient term or smoothing
 
 # Time stepping
 dt = 0.20 * min(dx, dy)**2 / (M * kappa + 1e-30)  # min(dx, dy) uses the smallest spacing, 1e^-30 prevents 0-division, some fancy math and Von Neumann Stability Analysis
