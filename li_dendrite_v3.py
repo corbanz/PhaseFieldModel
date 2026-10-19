@@ -76,8 +76,8 @@ mode        = 4           # 4-fold symmetry (BCC Li)
 
 # Electrochemistry
 alpha = 0.5               # α — asymmetry factor (Chen 2015 / Yan et al.)
-V_app = 0.20              # applied voltage, V (Chen 2015: Δφ = 0.20 V)
-E_std = 0.25              # E° — gives η_a ≈ −0.10 to −0.15 V at interface
+V_app = -0.20              # applied voltage, V (Chen 2015: Δφ = 0.20 V) : electrode negative vs far-field electrolyte
+E_std = 0.0              # E° — gives η_a ≈ −0.10 to −0.15 V at interface, Chen sets it 0
 
 # Conductivities (normalized)
 # Paper: σ̃_e = 10⁹, σ̃_s = 100 (ratio = 10⁷)
@@ -94,6 +94,7 @@ D_solution  = 30.0        # D̃_s — in electrolyte at reference T (298 K)
 # Temperature dependence of D (Yan et al. eq. 25)
 E_D   = 3.3e4             # activation energy, J/mol (Yan Table 1)
 T_ref = 298.15            # reference temperature, K
+cs_over_c0 = 76.4       # 7.64e4 / 1.0e3 (Yan §2.4)
 
 # =====================================================================
 # 4. SPATIAL OPERATORS
@@ -192,7 +193,7 @@ def solve_poisson(xi):
 
 def compute_eta_a(phi):
     """η_a = V_app − φ − E°   (negative everywhere → deposition)"""
-    return V_app - phi - E_std
+    return phi - E_std
 
 # =====================================================================
 # 9. BUTLER-VOLMER RATE  (the {} bracket in eq. 15 of Yan et al.)
@@ -259,13 +260,13 @@ def run_simulation(T_kelvin=298.15, nsteps=30000,
     # 3. Reaction:   dt < 1 / (2·M_η·|R_BV_max|·h'_max)
     #    h'_max = 30·(0.5)²·(0.5)² = 1.875
     #    At the interface, φ ≈ V_app/2, so η_a ≈ V_app − V_app/2 − E_std
-    eta_interface = V_app - V_app/2.0 - E_std   # estimate at interface center
+    eta_interface = V_app - E_std   # estimate at interface center
     bv_max = np.exp(min(alpha * n_elec * F_const * abs(eta_interface)
                         / (Rgas * T_kelvin), 50.0))
     h_prime_max = 1.875
 
     dt_diff   = 0.4 * dx**2 / (2.0 * max(D_s_T, M_sigma * kappa0))
-    dt_react  = 0.3 / (M_eta * bv_max * h_prime_max + 1e-30)
+    dt_react = 0.3 / (cs_over_c0 * M_eta * bv_max * h_prime_max + 1e-30)
     dt        = min(dt_diff, dt_react)
 
     if verbose:
@@ -299,7 +300,7 @@ def run_simulation(T_kelvin=298.15, nsteps=30000,
 
         # --- Eq. 16 of Yan et al. (concentration), simplified ---
         # Using D_eff(ξ,T) instead of uniform D_s
-        dc  = D_eff * laplacian(c) - h_prime(xi) * R_bv
+        dc = D_eff * laplacian(c) - cs_over_c0 * dxi
 
         xi += dt * dxi
         c  += dt * dc
