@@ -9,7 +9,7 @@ Requires Python 3 with NumPy, SciPy, and Matplotlib
 "python -m pip install numpy scipy matplotlib"
 
 **li_dendrite_v3.py:**
-The script runs one 40,000-step simulation at 25 °C and saves yan_fields.png, then runs three more for the temperature sweep and saves yan_sweep.png, then opens the results in a plot window. Each run takes roughly 10-15 minutes. Progress is printed every 10,000 steps. To save the images without opening windows, set the environment variable MPLBACKEND=Agg before running.
+The script runs one 40,000-step simulation at 25 °C, saves yan_fields.png, and opens the result in a plot window. Set RUN_SWEEP = True (in the driver at the bottom of the file) to also run the 0, 25 and 50 °C sweep, three more runs, and save yan_sweep.png. Each run takes roughly 10-15 minutes. Progress is printed every 10,000 steps. To save the images without opening windows, set the environment variable MPLBACKEND=Agg before running.
 
 ***Model*** \
 **Units/Domain:** \

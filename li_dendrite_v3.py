@@ -77,7 +77,7 @@ mode        = 4           # 4-fold symmetry (BCC Li)
 # Electrochemistry
 alpha = 0.5               # α — asymmetry factor (Chen 2015 / Yan et al.)
 V_app = -0.20              # applied voltage, V (Chen 2015: Δφ = 0.20 V) : electrode negative vs far-field electrolyte
-E_std = 0.0              # E° — gives η_a ≈ −0.10 to −0.15 V at interface, Chen sets it 0
+E_std = 0.0              #gives η_a ≈ −0.10 to −0.15 V at interface, Chen sets it 0
 
 # Conductivities (normalized)
 # Paper: σ̃_e = 10⁹, σ̃_s = 100 (ratio = 10⁷)
@@ -334,6 +334,7 @@ if __name__ == "__main__":
     # --- Single temperature run at 25°C ---
     T_run  = 298.15
     nsteps = 40000
+    RUN_SWEEP = False   # True also runs the 0/25/50 °C sweep (3 more runs)
 
     print(f"=== T = {T_run-273.15:.0f}°C   {nsteps} steps ===")
     print(f"Grid: {Nx}×{Ny}  domain: {Lx}×{Ly}  dx={dx:.4f}")
@@ -371,39 +372,40 @@ if __name__ == "__main__":
                  f'M_σ={M_sigma}  M_η={M_eta}  W={W}  '
                  f'κ₀={kappa0}  δ={delta_aniso}',
                  fontsize=10)
-    plt.tight_layout()
+    plt.tight_layout(rect=[0, 0, 1, .95])
     plt.savefig('yan_fields.png', dpi=130, bbox_inches='tight')
     print("Saved: yan_fields.png")
 
+if RUN_SWEEP:
     # --- Temperature sweep ---
-    print("\n=== Temperature sweep ===")
-    fig2, axes2 = plt.subplots(2, 3, figsize=(14, 8))
+        print("\n=== Temperature sweep ===")
+        fig2, axes2 = plt.subplots(2, 3, figsize=(14, 8))
 
-    for col, T in enumerate([273.15, 298.15, 323.15]):
-        print(f"\n  T = {T-273.15:.0f}°C")
-        s, dt_t, Ds = run_simulation(
-            T_kelvin=T, nsteps=nsteps, save_every=nsteps,
-            poisson_every=25, verbose=True)
-        _, xi, c, phi, eta_a = s[-1]
+        for col, T in enumerate([273.15, 298.15, 323.15]):
+            print(f"\n  T = {T-273.15:.0f}°C")
+            s, dt_t, Ds = run_simulation(
+                T_kelvin=T, nsteps=nsteps, save_every=nsteps,
+                poisson_every=25, verbose=True)
+            _, xi, c, phi, eta_a = s[-1]
 
-        ax = axes2[0, col]
-        ax.imshow(xi, origin='lower', vmin=0, vmax=1, cmap='viridis')
-        ax.set_title(f'T={T-273.15:.0f}°C  D_s={Ds:.1f}', fontsize=10)
-        ax.set_xticks([]); ax.set_yticks([])
+            ax = axes2[0, col]
+            ax.imshow(xi, origin='lower', vmin=0, vmax=1, cmap='viridis')
+            ax.set_title(f'T={T-273.15:.0f}°C  D_s={Ds:.1f}', fontsize=10)
+            ax.set_xticks([]); ax.set_yticks([])
 
-        ax = axes2[1, col]
-        im = ax.imshow(c, origin='lower', vmin=0, vmax=1, cmap='magma')
-        plt.colorbar(im, ax=ax, fraction=0.046)
-        ax.set_title(r'Li$^+$ concentration $C$', fontsize=9)
-        ax.set_xticks([]); ax.set_yticks([])
+            ax = axes2[1, col]
+            im = ax.imshow(c, origin='lower', vmin=0, vmax=1, cmap='magma')
+            plt.colorbar(im, ax=ax, fraction=0.046)
+            ax.set_title(r'Li$^+$ concentration $C$', fontsize=9)
+            ax.set_xticks([]); ax.set_yticks([])
 
-    axes2[0, 0].set_ylabel(r'Phase $\xi$', fontsize=10)
-    axes2[1, 0].set_ylabel(r'Concentration $C$', fontsize=10)
-    fig2.suptitle('Temperature sweep — Yan et al. normalized parameters',
-                  fontsize=12)
-    plt.tight_layout()
-    plt.savefig('yan_sweep.png', dpi=130, bbox_inches='tight')
-    print("\nSaved: yan_sweep.png")
+        axes2[0, 0].set_ylabel(r'Phase $\xi$', fontsize=10)
+        axes2[1, 0].set_ylabel(r'Concentration $C$', fontsize=10)
+        fig2.suptitle('Temperature sweep — Yan et al. normalized parameters',
+                    fontsize=12)
+        plt.tight_layout()
+        plt.savefig('yan_sweep.png', dpi=130, bbox_inches='tight')
+        print("\nSaved: yan_sweep.png")
 
     if not os.environ.get('MPLBACKEND', '').lower() == 'agg':
         plt.show()
